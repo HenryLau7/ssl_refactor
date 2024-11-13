@@ -64,7 +64,8 @@ def parse_args():
     )
     parser.add_argument("--weight_decay", type=float, default=0.01, help="Weight decay")
     parser.add_argument("--dropout", default=0.1, type=float, help="Dropout rate")
-    parser.add_argument("--batch_size", default=8192, type=int, help="Batch size")
+    # parser.add_argument("--batch_size", default=8192, type=int, help="Batch size")
+    parser.add_argument("--batch_size", default=131072, type=int, help="Batch size")
     parser.add_argument("--mask_type", default="sparsemax", type=str, help="Mask type")
     parser.add_argument("--version", type=str, default="", help="Version of the model")
     parser.add_argument("--lr", type=float, default=0.001, help="Learning rate")
@@ -86,6 +87,12 @@ def parse_args():
         type=float,
         help="Percentage of data to use for training",
     )
+    parser.add_argument(
+        "--device",
+        default="cuda",
+        type=str,
+        help="Device to use for training",
+    )
     return parser.parse_args()
 
 
@@ -96,6 +103,8 @@ def train():
     # FIX SEED FOR REPRODUCIBILITY
     # seed_everything(90)
     torch.manual_seed(0)
+    
+    torch.set_float32_matmul_precision('high')
 
     # if args.mask_rate is not None but args.masking_strategy is None, args.masking_strategy is set to 'random'
     if args.mask_rate is not None and args.masking_strategy is None:
@@ -147,6 +156,8 @@ def train():
         "masking",
         "CN_" + subfolder,
     )
+    # print(args.masking_strategy)
+    # import pdb; pdb.set_trace()
     print("Will save model to " + CHECKPOINT_PATH)
     Path(CHECKPOINT_PATH).mkdir(parents=True, exist_ok=True)
 
@@ -163,7 +174,7 @@ def train():
             "gradient_clip_val": 1.0,
             "gradient_clip_algorithm": "norm",
             "default_root_dir": CHECKPOINT_PATH,
-            "accelerator": "gpu",
+            "accelerator": args.device,
             "devices": 1,
             "num_sanity_val_steps": 0,
             "logger": [TensorBoardLogger(CHECKPOINT_PATH, name="default")],
@@ -277,6 +288,7 @@ def train():
         },
     )
 
+    estim.model = estim.model.to(args.device)
     # check if there are .ckpt files in the checkpoint directory
     if checkpoint_exists(CHECKPOINT_PATH):
         print(
@@ -287,6 +299,7 @@ def train():
         estim.train(ckpt_path=ckpt)
     else:
         print("No loading of pre-trained weights, start training from scratch")
+        # import pdb; pdb.set_trace()
         estim.train()
 
 
