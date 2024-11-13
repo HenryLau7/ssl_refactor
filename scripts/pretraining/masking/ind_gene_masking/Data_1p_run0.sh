@@ -15,10 +15,7 @@ else
     source "$HOME/.bashrc"
 fi
 
-
-
-
-
+export PYTHONPATH=$PYTHONPATH:$SSL_PROJECT_HOME
 cd $SSL_PROJECT_HOME/self_supervision/trainer/masking
 
 python -u train.py --mask_rate 0.5 --model 'MLP' --dropout 0.1 --weight_decay 0.01 --lr 0.001 --decoder --version 'data_1p_run0' --data_perc 1e-2

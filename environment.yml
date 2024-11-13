@@ -6,4 +6,3 @@ dependencies:
   - cudatoolkit=11.7
   - pip:
       - -r requirements.txt
-      - -r requirements-gpu.txt
